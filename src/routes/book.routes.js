@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Book = require('../models/book.Model');
+const Book = require('../models/book.model');
 
 // Middleware para obtener un libro por ID (GET, POST, PUT, PATCH, DELETE)
 const getBook = async (req, res, next) => {
