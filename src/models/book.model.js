@@ -5,7 +5,9 @@ const bookSchema = new mongoose.Schema(
     title: String,
     author: String,
     genre: String,
-    publication_date: Date,
+    pages: Number,
+    original_language: String,
+    publication_date: String,
     }
 );
 

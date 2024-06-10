@@ -50,103 +50,78 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 })
-
-// Crear un libro [POST]
-router.post('/', async (req, res) => {
-    const { title, author, genre, publication_date } = req?.body
-    if (!title || !author || !genre || !publication_date) {
-        return res.status(400).json({
-            message: 'Los campos título, autor, género y fecha son obligatorios'
-        })
-    }
-
-    const book = new Book(
-        {
-            title,
-            author,
-            genre,
-            publication_date
-        }
-    )
-
-    try {
-        const newBook = await book.save()
-        console.log(newBook)
-        res.status(201).json(newBook)
-    } catch (error) {
-        res.status(400).json({
-            message: error.message
-        })
-    }
-
+// Obtener un libro por ID [GET BY ID]
+router.get('/:id', getBook, (req, res) => {
+    res.json(res.book)
 })
 
-// Obtener un libro por ID [GET]
-router.get('/:id', getBook, async (req, res) => {
-    res.json(res.book);
+// Crear un libro [CREATE]
+router.post('/', async (req, res) => {
+    const book = new Book({
+        title: req.body.title,
+        author: req.body.author,
+        genre: req.body.genre,
+        pages: req.body.pages,
+        original_language: req.body.original_language,
+        publication_date: req.body.publication_date
+    })
+    try {
+        const newBook = await book.save()
+        res.status(201).json(newBook)
+    } catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+}
+)
+
+// Actualizar un libro [UPDATE]
+router.patch('/:id', getBook, async (req, res) => {
+    if (req.body.title != null) {
+        res.book.title = req.body.title
+    }
+    if (req.body.author != null) {
+        res.book.author = req.body.author
+    }
+    if (req.body.genre != null) {
+        res.book.genre = req.body.genre
+    }
+    if (req.body.pages != null) {
+        res.book.pages = req.body.pages
+    }
+    if (req.body.original_language != null) {
+        res.book.original_language = req.body.original_language
+    }
+    if (req.body.publication_date != null) {
+        res.book.publication_date = req.body.publication_date
+    }
+    try {
+        const updatedBook = await res.book.save()
+        res.json(updatedBook)
+    } catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+})
+
+// Eliminar un libro [DELETE]
+router.delete('/:id', getBook, async (req, res) => {
+    try {
+        await res.book.remove()
+        res.json({ message: 'Libro eliminado' })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
 })
 
 // Actualizar un libro [PUT]
 router.put('/:id', getBook, async (req, res) => {
     try {
-        const book = res.book
-        book.title = req.body.title || book.title;
-        book.author = req.body.author || book.author;
-        book.genre = req.body.genre || book.genre;
-        book.publication_date = req.body.publication_date || book.publication_date;
-
         const updatedBook = await book.save()
         res.json(updatedBook)
     } catch (error) {
-        res.status(400).json({
-            message: error.message
-        })
+        res.status(400).json({ message: error.message })
     }
-})
-
-// Actualizar un libro [PATCH]
-router.patch('/:id', getBook, async (req, res) => {
-
-    if (!req.body.title && !req.body.author && !req.body.genre && !req.body.publication_date) {
-        res.status(400).json({
-            message: 'Al menos uno de estos campos debe ser enviado: Título, Autor, Género o fecha de publicación'
-        })
-
-    }
-
-    try {
-        const book = res.book
-        book.title = req.body.title || book.title;
-        book.author = req.body.author || book.author;
-        book.genre = req.body.genre || book.genre;
-        book.publication_date = req.body.publication_date || book.publication_date;
-
-        const updatedBook = await book.save()
-        res.json(updatedBook)
-    } catch (error) {
-        res.status(400).json({
-            message: error.message
-        })
-    }
-})
-
-
-// Eliminar un libro [DELETE]
-router.delete('/:id', getBook, async (req, res) => {
-    try {
-        const book = res.book
-        await book.deleteOne({
-            _id: book._id
-        });
-        res.json({
-            message: `El libro ${book.title} fue eliminado correctamente`
-        })
-    } catch (error) {
-        res.status(500).json({
-            message: error.message
-        })
-    }
-})
+}
+)
 
 
 module.exports = router
