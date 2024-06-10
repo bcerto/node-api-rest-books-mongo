@@ -1,80 +1,98 @@
-const express = require('express');
-const router = express.Router();
-const Book = require('../models/book.model');
+const express = require('express')
+const router = express.Router()
+const Book = require('../models/book.model')
 
-// Middleware para obtener un libro por ID (GET, POST, PUT, PATCH, DELETE)
+//MIDDLEWARE
 const getBook = async (req, res, next) => {
     let book;
     const { id } = req.params;
 
-    if(!id.match(/^[0-9a-fA-F]{24}$/)) {
-        return res.status(400).json({ message: 'ID inválido' });
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(404).json(
+            {
+                message: 'El ID del libro no es válido'
+            }
+        )
     }
 
     try {
         book = await Book.findById(id);
-        if(!book) {
-            return res.status(404).json({ message: 'Libro no encontrado' });
+        if (!book) {
+            return res.status(404).json(
+                {
+                    message: 'El libro no fue encontrado'
+                }
+            )
         }
 
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).json(
+            {
+                message: error.message
+            }
+        )
     }
+
     res.book = book;
-    next();
+    next()
 }
 
-// Obtener todos los libros
+// Obtener todos los libros [GET ALL]
 router.get('/', async (req, res) => {
     try {
         const books = await Book.find();
-        console.log('GET ALLs', books);
-        if (books.length === 0) return res.status(204).json({ message: 'No hay libros en la base de datos' });
-        return res.json(books);
+        console.log('GET ALL', books)
+        if (books.length === 0) {
+            return res.status(204).json([])
+        }
+        res.json(books)
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message })
     }
-});
+})
 
-
-// Obtener un libro por ID
-router.get('/:id', getBook, async (req, res) => {
-    res.json(res.book);
-});
-
-// Crear un nuevo libro (recurso)
+// Crear un libro [POST]
 router.post('/', async (req, res) => {
-    const { title, author, genre, pages, original_languaje, publication_date } = req?.body
-    if (!title || !author || !genre || !pages || !original_languaje || !publication_date)
-        return res.status(400).json({ message: 'Faltan datos obligatorios' });
+    const { title, author, genre, publication_date } = req?.body
+    if (!title || !author || !genre || !publication_date) {
+        return res.status(400).json({
+            message: 'Los campos título, autor, género y fecha son obligatorios'
+        })
+    }
 
-    const book = new Book({
-        title,
-        author,
-        genre,
-        pages,
-        original_languaje,
-        publication_date
-    });
+    const book = new Book(
+        {
+            title,
+            author,
+            genre,
+            publication_date
+        }
+    )
 
     try {
-        const newBook = await book.save();
-        console.log('POST', newBook);
-        return res.status(201).json(newBook);
+        const newBook = await book.save()
+        console.log(newBook)
+        res.status(201).json(newBook)
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({
+            message: error.message
+        })
     }
-});
 
-// Actualizar un libro por ID
+})
+
+// Obtener un libro por ID [GET]
+router.get('/:id', getBook, async (req, res) => {
+    res.json(res.book);
+})
+
+// Actualizar un libro [PUT]
 router.put('/:id', getBook, async (req, res) => {
     try {
         const book = res.book
         book.title = req.body.title || book.title;
         book.author = req.body.author || book.author;
         book.genre = req.body.genre || book.genre;
-        book.pages = req.body.pages || book.pages;
-        book.original_languaje = req.body.original_languaje || book.original_languaje;
         book.publication_date = req.body.publication_date || book.publication_date;
 
         const updatedBook = await book.save()
@@ -89,10 +107,11 @@ router.put('/:id', getBook, async (req, res) => {
 // Actualizar un libro [PATCH]
 router.patch('/:id', getBook, async (req, res) => {
 
-    if (!req.body.title && !req.body.author && !req.body.genre && !req.body.pages &&!req.body.original_languaje && !req.body.publication_date) {
+    if (!req.body.title && !req.body.author && !req.body.genre && !req.body.publication_date) {
         res.status(400).json({
             message: 'Al menos uno de estos campos debe ser enviado: Título, Autor, Género o fecha de publicación'
         })
+
     }
 
     try {
@@ -100,8 +119,6 @@ router.patch('/:id', getBook, async (req, res) => {
         book.title = req.body.title || book.title;
         book.author = req.body.author || book.author;
         book.genre = req.body.genre || book.genre;
-        book.pages = req.body.pages || book.pages;
-        book.original_languaje = req.body.original_languaje || book.original_languaje;
         book.publication_date = req.body.publication_date || book.publication_date;
 
         const updatedBook = await book.save()
@@ -112,6 +129,7 @@ router.patch('/:id', getBook, async (req, res) => {
         })
     }
 })
+
 
 // Eliminar un libro [DELETE]
 router.delete('/:id', getBook, async (req, res) => {
@@ -130,4 +148,5 @@ router.delete('/:id', getBook, async (req, res) => {
     }
 })
 
-module.exports =router;
+
+module.exports = router
